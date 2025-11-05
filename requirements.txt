@@ -1,0 +1,17 @@
+# PDF processing with bounding boxes
+docling
+docling-parse
+docling-core
+
+# PDF manipulation and rendering
+PyMuPDF
+Pillow
+
+# Machine learning and NLP
+torch>=1.10.0
+transformers
+accelerate
+
+# Utilities
+numpy
+tqdm
