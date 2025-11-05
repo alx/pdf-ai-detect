@@ -16,6 +16,23 @@ Visualize AI-generated content in PDF files using colorized bounding boxes. This
 
 ## Installation
 
+### Using UV (Recommended)
+
+[UV](https://github.com/astral-sh/uv) is a fast Python package installer and environment manager:
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/pdf-ai-detect.git
+cd pdf-ai-detect
+
+# Create virtual environment and install dependencies
+uv venv
+uv pip install -r requirements.txt
+
+# Run the script using uv
+uv run python pdf_ai_colorize.py input.pdf output.pdf
+```
+
 ### Quick Setup
 
 ```bash
@@ -49,13 +66,18 @@ git clone https://github.com/baoguangsheng/fast-detect-gpt.git
 ### Basic Usage
 
 ```bash
+# Using uv (automatically uses the virtual environment)
+uv run python pdf_ai_colorize.py input.pdf output.pdf
+
+# Or activate the virtual environment manually
+source .venv/bin/activate
 python pdf_ai_colorize.py input.pdf output.pdf
 ```
 
 ### Advanced Options
 
 ```bash
-python pdf_ai_colorize.py input.pdf output.pdf \
+uv run python pdf_ai_colorize.py input.pdf output.pdf \
     --model gpt2-medium \
     --unit-type line \
     --merge-boxes 5 \
@@ -82,7 +104,7 @@ python pdf_ai_colorize.py input.pdf output.pdf \
 ### Example 1: Basic Analysis
 
 ```bash
-python pdf_ai_colorize.py research_paper.pdf analyzed.pdf
+uv run python pdf_ai_colorize.py research_paper.pdf analyzed.pdf
 ```
 
 ### Example 2: High-Precision Analysis
@@ -90,7 +112,7 @@ python pdf_ai_colorize.py research_paper.pdf analyzed.pdf
 Use a larger model and finer granularity for better accuracy:
 
 ```bash
-python pdf_ai_colorize.py document.pdf output.pdf \
+uv run python pdf_ai_colorize.py document.pdf output.pdf \
     --model gpt2-large \
     --unit-type word \
     --merge-boxes 10
@@ -101,7 +123,7 @@ python pdf_ai_colorize.py document.pdf output.pdf \
 Use a smaller model for faster processing:
 
 ```bash
-python pdf_ai_colorize.py document.pdf output.pdf \
+uv run python pdf_ai_colorize.py document.pdf output.pdf \
     --model distilgpt2 \
     --merge-boxes 3
 ```
