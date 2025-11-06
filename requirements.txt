@@ -15,3 +15,8 @@ accelerate
 # Utilities
 numpy
 tqdm
+
+# Testing
+pytest>=7.0.0
+pytest-cov
+reportlab

@@ -86,13 +86,19 @@ class PDFProcessor:
             logger.info(f"Processing page {page_no}")
 
             for cell in page.iterate_cells(unit_type=unit):
-                # cell.rect is a Rectangle object with bbox property
-                # bbox is (x0, y0, x1, y1)
-                bbox = cell.rect.bbox if hasattr(cell.rect, 'bbox') else (
-                    cell.rect.x, cell.rect.y,
-                    cell.rect.x + cell.rect.width,
-                    cell.rect.y + cell.rect.height
-                )
+                # cell.rect is a BoundingRectangle object
+                # Try to get bbox property, otherwise calculate from corner coordinates
+                if hasattr(cell.rect, 'bbox'):
+                    bbox = cell.rect.bbox
+                else:
+                    # New API uses corner coordinates (r_x0, r_y0, r_x1, r_y1, r_x2, r_y2, r_x3, r_y3)
+                    # Calculate axis-aligned bounding box from corner coordinates
+                    bbox = (
+                        min(cell.rect.r_x0, cell.rect.r_x1, cell.rect.r_x2, cell.rect.r_x3),  # x0 (left)
+                        min(cell.rect.r_y0, cell.rect.r_y1, cell.rect.r_y2, cell.rect.r_y3),  # y0 (top)
+                        max(cell.rect.r_x0, cell.rect.r_x1, cell.rect.r_x2, cell.rect.r_x3),  # x1 (right)
+                        max(cell.rect.r_y0, cell.rect.r_y1, cell.rect.r_y2, cell.rect.r_y3)   # y1 (bottom)
+                    )
 
                 box = BoundingBox(
                     text=cell.text,
@@ -205,17 +211,35 @@ class PDFProcessor:
 
         # Draw colored rectangles for each bounding box
         for box in self.bounding_boxes:
-            if box.page_no >= len(doc):
+            # Convert from docling's 1-based page numbering to PyMuPDF's 0-based indexing
+            page_index = box.page_no - 1
+
+            if page_index >= len(doc) or page_index < 0:
                 logger.warning(f"Page {box.page_no} out of range, skipping")
                 continue
 
-            page = doc[box.page_no]
+            page = doc[page_index]
 
             # Get color based on score
             color = self.score_to_color(box.score)
 
-            # Create rectangle
-            rect = fitz.Rect(box.rect)
+            # Transform coordinates if page has a Y-axis flip transformation
+            # Check the transformation matrix for Y-axis flip: Matrix(1, 0, 0, -1, 0, height)
+            matrix = page.transformation_matrix
+            x0, y0, x1, y1 = box.rect
+
+            if matrix.d == -1.0:
+                # Y-axis is flipped; transform coordinates
+                # matrix.f contains the translation (page height)
+                page_height = matrix.f
+                # For a rect in bottom-left origin (x0, y0_bottom, x1, y1_top),
+                # transform to flipped space: (x0, height - y1_top, x1, height - y0_bottom)
+                y0_new = page_height - y1
+                y1_new = page_height - y0
+                rect = fitz.Rect(x0, y0_new, x1, y1_new)
+            else:
+                # No transformation needed
+                rect = fitz.Rect(box.rect)
 
             # Draw filled rectangle with transparency
             page.draw_rect(
